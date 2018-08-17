@@ -390,7 +390,28 @@ class MiniCssExtractPlugin {
     const [chunkGroup] = chunk.groupsIterable;
     if (typeof chunkGroup.getModuleIndex2 === 'function') {
       modules.sort(
-        (a, b) => chunkGroup.getModuleIndex2(a) - chunkGroup.getModuleIndex2(b)
+        (a, b) => {
+          const aIndex2 = chunkGroup.getModuleIndex2(a);
+          const bIndex2 = chunkGroup.getModuleIndex2(b);
+
+          // Sort undefined indexes to bottom like regular Array.sort
+          // This handles the edge case where one or both modules
+          // are not in the chosen chunk group and getModuleIndex2
+          // returns undefined
+          if (typeof aIndex2 === 'undefined' && typeof bIndex2 === 'undefined') {
+            return 0;
+          }
+
+          if (typeof aIndex2 === 'undefined') {
+            return 1;
+          }
+
+          if (typeof bIndex2 === 'undefined') {
+            return -1;
+          }
+
+          return aIndex2 - bIndex2;
+        }
       );
     } else {
       // fallback for older webpack versions
